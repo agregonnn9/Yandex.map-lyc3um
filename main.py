@@ -30,6 +30,6 @@ def show_yandex_map(latitude, longitude, zoom):
         pygame.display.update()
 
     pygame.quit()
-
+#
 
 show_yandex_map(68.97917, 33.09251, 10)
