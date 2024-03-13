@@ -1,42 +1,57 @@
-import pygame
+import sys
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QMainWindow, QApplication
 import requests
+from ui import Ui_MainWindow
+import os
 
-WIDTH, HEIGHT = 600, 450
 
-latitude, longitude = 68.97917, 33.09251
-zoom = 10
+class YandexMapApp(QMainWindow, Ui_MainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.pixmap = None
+        self.latitude, self.longitude = 68.97917, 33.09251
+        self.zoom = 10
+        self.show_yandex_map()
+        self.PgUp.clicked.connect(self.zoom_pl)
+        self.PgDown.clicked.connect(self.zoom_mn)
 
-def show_yandex_map(latitude, longitude, zoom):
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption('Яндекс Карты')
-
-    running = True
-    while running:
-        response = requests.get(
-            f'https://static-maps.yandex.ru/1.x/?ll={longitude},{latitude}&z={zoom}&l=map'
-        )
+    def show_yandex_map(self):
+        params = {
+            'll': f'{self.latitude},{self.longitude}',
+            'z': self.zoom,
+            'l': 'map'
+        }
+        response = requests.get('https://static-maps.yandex.ru/1.x/', params=params)
 
         with open('map.png', 'wb') as f:
             f.write(response.content)
 
-        map_image = pygame.image.load('map.png')
+        self.pixmap = QPixmap('map.png')
+        self.label.setPixmap(self.pixmap)
 
-        screen.blit(map_image, (0, 0))
+    def closeEvent(self, a0):
+        os.remove('map.png')
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    zoom += 1
-                elif event.key == pygame.K_DOWN:
-                    zoom -= 1
-                elif event.key == pygame.K_ESCAPE:
-                    running = False
+    def zoom_pl(self):
+        if self.zoom != 21:
+            self.zoom += 1
+            self.show_yandex_map()
 
-        pygame.display.update()
+    def zoom_mn(self):
+        if self.zoom != 0:
+            self.zoom -= 1
+            self.show_yandex_map()
 
-    pygame.quit()
 
-show_yandex_map(latitude, longitude, zoom)
+def except_hook(cls, exception, traceback):
+    sys.__excepthook__(cls, exception, traceback)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    yam = YandexMapApp()
+    yam.show()
+    sys.excepthook = except_hook
+    sys.exit(app.exec_())
