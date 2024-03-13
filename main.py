@@ -109,6 +109,8 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
         with open('point.json', 'w', encoding='utf8') as jsonfile:
             jsonfile.write(json.dumps(responce_json, indent=2, ensure_ascii=False))
         coord_point = responce_json['features'][0]['geometry']['coordinates']
+        adress_point = responce_json['features'][0]['properties']['GeocoderMetaData']['text']
+        self.address_label.setText(f'Адрес: {adress_point}')
         self.longitude, self.latitude = coord_point
         self.pt = f'{self.longitude},{self.latitude},pm2rdl'
         self.show_yandex_map()
@@ -118,6 +120,7 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
     def reset(self):
         self.pt = ''
         self.search_text.setText('')
+        self.address_label.setText('Адрес: ')
         self.show_yandex_map()
         self.clearFocus()
 
