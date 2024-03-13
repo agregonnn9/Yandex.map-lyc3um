@@ -11,23 +11,26 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.setFixedSize(self.width(), self.height())
         self.pixmap = None
         self.zoom = 10
         self.step_for_zoom = {0: 10.0, 1: 5.0, 2: 4.0, 3: 2.0, 4: 2.0, 5: 1.5, 6: 1.5, 7: 1.0, 8: 1.0, 9: 0.1, 10: 0.1,
                               11: 0.01, 12: 0.01, 13: 0.01, 14: 0.001, 15: 0.001, 16: 0.001, 17: 0.001, 18: 0.0001,
                               19: 0.0001, 20: 0.0001, 21: 0.0001}
         self.step = self.step_for_zoom[self.zoom]
+        self.map = 'map'
 
         self.latitude, self.longitude = 68.97917, 33.09251
         self.show_yandex_map()
         self.PgUp.clicked.connect(self.zoom_pl)
         self.PgDown.clicked.connect(self.zoom_mn)
+        self.map_choose.currentIndexChanged.connect(self.set_map)
 
     def show_yandex_map(self):
         params = {
             'll': f'{self.longitude},{self.latitude}',
             'z': self.zoom,
-            'l': 'map'
+            'l': self.map
         }
         response = requests.get('https://static-maps.yandex.ru/1.x/', params=params)
 
@@ -74,6 +77,16 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
             else:
                 self.longitude = 180
         self.show_yandex_map()
+
+    def set_map(self):
+        if self.map_choose.currentIndex() == 0:
+            self.map = 'map'
+        elif self.map_choose.currentIndex() == 1:
+            self.map = 'sat'
+        elif self.map_choose.currentIndex() == 2:
+            self.map = 'sat,skl'
+        self.show_yandex_map()
+        self.map_choose.clearFocus()
 
 
 def except_hook(cls, exception, traceback):
