@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 import requests
 from ui import Ui_MainWindow
 import os
+import json
 
 
 class YandexMapApp(QMainWindow, Ui_MainWindow):
@@ -19,17 +20,20 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
                               19: 0.0001, 20: 0.0001, 21: 0.0001}
         self.step = self.step_for_zoom[self.zoom]
         self.map = 'map'
+        self.pt = ''
 
         self.latitude, self.longitude = 68.97917, 33.09251
         self.show_yandex_map()
         self.PgUp.clicked.connect(self.zoom_pl)
         self.PgDown.clicked.connect(self.zoom_mn)
         self.map_choose.currentIndexChanged.connect(self.set_map)
+        self.search_btn.clicked.connect(self.search)
 
     def show_yandex_map(self):
         params = {
             'll': f'{self.longitude},{self.latitude}',
             'z': self.zoom,
+            'pt': self.pt,
             'l': self.map
         }
         response = requests.get('https://static-maps.yandex.ru/1.x/', params=params)
@@ -47,11 +51,13 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
         if self.zoom != 21:
             self.zoom += 1
             self.show_yandex_map()
+        self.clearFocus()
 
     def zoom_mn(self):
         if self.zoom != 0:
             self.zoom -= 1
             self.show_yandex_map()
+        self.clearFocus()
 
     def keyPressEvent(self, event):
         self.step = self.step_for_zoom[self.zoom]
@@ -60,23 +66,25 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
                 self.latitude += self.step
             else:
                 self.latitude = 90
+            self.show_yandex_map()
         elif event.key() == Qt.Key_S:
             if self.latitude - self.step >= -90:
                 self.latitude -= self.step
             else:
                 self.latitude = -90
+            self.show_yandex_map()
         elif event.key() == Qt.Key_A:
             if self.longitude - self.step >= -180:
                 self.longitude -= self.step
             else:
                 self.longitude = -180
-
+            self.show_yandex_map()
         elif event.key() == Qt.Key_D:
             if self.longitude + self.step <= 180:
                 self.longitude += self.step
             else:
                 self.longitude = 180
-        self.show_yandex_map()
+            self.show_yandex_map()
 
     def set_map(self):
         if self.map_choose.currentIndex() == 0:
@@ -87,6 +95,24 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
             self.map = 'sat,skl'
         self.show_yandex_map()
         self.map_choose.clearFocus()
+
+    def search(self):
+        params = {
+            'apikey': 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3',
+            'lang': 'ru_RU',
+            'text': self.search_text.text(),
+            'type': 'geo',
+        }
+        responce = requests.get('https://search-maps.yandex.ru/v1/', params=params)
+        responce_json = responce.json()
+        with open('point.json', 'w', encoding='utf8') as jsonfile:
+            jsonfile.write(json.dumps(responce_json, indent=2, ensure_ascii=False))
+        coord_point = responce_json['features'][0]['geometry']['coordinates']
+        self.longitude, self.latitude = coord_point
+        self.pt = f'{self.longitude},{self.latitude},pm2rdl'
+        self.show_yandex_map()
+        self.search_btn.clearFocus()
+        self.search_text.clearFocus()
 
 
 def except_hook(cls, exception, traceback):
