@@ -28,6 +28,7 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
         self.PgDown.clicked.connect(self.zoom_mn)
         self.map_choose.currentIndexChanged.connect(self.set_map)
         self.search_btn.clicked.connect(self.search)
+        self.reset_btn.clicked.connect(self.reset)
 
     def show_yandex_map(self):
         params = {
@@ -113,6 +114,12 @@ class YandexMapApp(QMainWindow, Ui_MainWindow):
         self.show_yandex_map()
         self.search_btn.clearFocus()
         self.search_text.clearFocus()
+
+    def reset(self):
+        self.pt = ''
+        self.search_text.setText('')
+        self.show_yandex_map()
+        self.clearFocus()
 
 
 def except_hook(cls, exception, traceback):
